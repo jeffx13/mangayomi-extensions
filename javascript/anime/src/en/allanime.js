@@ -1,7 +1,7 @@
 const mangayomiSources = [{
     "name": "AllAnime",
     "lang": "en",
-    "baseUrl": "https://allanime.to",
+    "baseUrl": "https://allmanga.to",
     "apiUrl": "https://api.allanime.day/api",
     "iconUrl": "https://raw.githubusercontent.com/kodjodevf/mangayomi-extensions/main/javascript/icon/en.allanime.png",
     "typeSource": "single",
@@ -168,7 +168,7 @@ class DefaultExtension extends MProvider {
             let quality = "";
             if (videoUrl.includes("/apivtwo/") && altHosterSelection.some(element => 'player' === element)) {
                 quality = `internal ${video.sourceName}`;
-                const vids = await new AllAnimeExtractor({ "Referer": baseUrl }, "https://allanime.to").videoFromUrl(videoUrl, quality);
+                const vids = await new AllAnimeExtractor({ "Referer": baseUrl }, baseUrl).videoFromUrl(videoUrl, quality);
                 for (const vid of vids) {
                     videos.push(vid);
                 }
