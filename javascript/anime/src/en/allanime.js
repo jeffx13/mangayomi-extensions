@@ -1,7 +1,7 @@
 const mangayomiSources = [{
     "name": "AllAnime",
     "lang": "en",
-    "baseUrl": "https://allanime.to",
+    "baseUrl": "https://allmanga.to",
     "apiUrl": "https://api.allanime.day/api",
     "iconUrl": "https://raw.githubusercontent.com/kodjodevf/mangayomi-extensions/main/javascript/icon/en.allanime.png",
     "typeSource": "single",
@@ -134,6 +134,8 @@ class DefaultExtension extends MProvider {
         } else {
             episodes = episodesDub;
         }
+        episodes = episodes.reverse();
+
         return {
             description, author, status, genre, episodes
         }
@@ -159,31 +161,17 @@ class DefaultExtension extends MProvider {
         if (translationType.length == 0) {
             return [];
         }
-        const encodedGql = `?variables=%0A%20%20%20%20%20%20%20%20%7B%0A%20%20%20%20%20%20%20%20%20%20%22showId%22:%20%22${ep.showId}%22,%0A%20%20%20%20%20%20%20%20%20%20%22episodeString%22:%20%22${ep.episodeString}%22,%0A%20%20%20%20%20%20%20%20%20%20%22translationType%22:%20%22${translationType[0]}%22%0A%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%20%20&query=%0A%20%20%20%20%20%20%20%20query(%0A%20%20%20%20%20%20%20%20%20%20$showId:%20String!%0A%20%20%20%20%20%20%20%20%20%20$episodeString:%20String!%0A%20%20%20%20%20%20%20%20%20%20$translationType:%20VaildTranslationTypeEnumType!%0A%20%20%20%20%20%20%20%20)%20%7B%0A%20%20%20%20%20%20%20%20%20%20episode(%0A%20%20%20%20%20%20%20%20%20%20%20%20showId:%20$showId%0A%20%20%20%20%20%20%20%20%20%20%20%20episodeString:%20$episodeString%0A%20%20%20%20%20%20%20%20%20%20%20%20translationType:%20$translationType%0A%20%20%20%20%20%20%20%20%20%20)%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20sourceUrls%0A%20%20%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%20%20`;
+        const encodedGql = `?variables={"showId":"${ep.showId}","translationType":"sub","episodeString":"${ep.episodeString}"}&extensions={%22persistedQuery%22:{%22version%22:1,%22sha256Hash%22:%225f1a64b73793cc2234a389cf3a8f93ad82de7043017dd551f38f65b89daa65e0%22}}`;
         const videoJson = JSON.parse(await this.request(encodedGql));
         const videos = [];
         const altHosterSelection = preferences.get('alt_hoster_selection1');
         for (const video of videoJson.data.episode.sourceUrls) {
+        	if (video.sourceName.includes("Luf")) continue;
             const videoUrl = this.decryptSource(video.sourceUrl);
             let quality = "";
             if (videoUrl.includes("/apivtwo/") && altHosterSelection.some(element => 'player' === element)) {
                 quality = `internal ${video.sourceName}`;
-                const vids = await new AllAnimeExtractor({ "Referer": baseUrl }, "https://allanime.to").videoFromUrl(videoUrl, quality);
-                for (const vid of vids) {
-                    videos.push(vid);
-                }
-            } else if (["vidstreaming", "https://gogo", "playgo1.cc", "playtaku", "vidcloud"].some(element => videoUrl.includes(element)) && altHosterSelection.some(element => 'vidstreaming' === element)) {
-                const vids = await gogoCdnExtractor(videoUrl);
-                for (const vid of vids) {
-                    videos.push(vid);
-                }
-            } else if (["dood", "d0"].some(element => videoUrl.includes(element)) && altHosterSelection.some(element => 'dood' === element)) {
-                const vids = await doodExtractor(videoUrl);
-                for (const vid of vids) {
-                    videos.push(vid);
-                }
-            } else if (["ok.ru", "okru"].some(element => videoUrl.includes(element)) && altHosterSelection.some(element => 'okru' === element)) {
-                const vids = await okruExtractor(videoUrl);
+                const vids = await new AllAnimeExtractor({ "Referer": baseUrl }, baseUrl).videoFromUrl(videoUrl, quality);
                 for (const vid of vids) {
                     videos.push(vid);
                 }
@@ -192,22 +180,8 @@ class DefaultExtension extends MProvider {
                 for (const vid of vids) {
                     videos.push(vid);
                 }
-            } else if (videoUrl.includes("streamlare.com") && altHosterSelection.some(element => 'streamlare' === element)) {
-                const vids = await streamlareExtractor(videoUrl, 'Streamlare ');
-                for (const vid of vids) {
-                    videos.push(vid);
-                }
-            } else if (["filemoon", "moonplayer"].some(element => videoUrl.includes(element)) && altHosterSelection.some(element => 'filemoon' === element)) {
-                const vids = await filemoonExtractor(videoUrl);
-                for (const vid of vids) {
-                    videos.push(vid);
-                }
-            } else if (videoUrl.includes("wish") && altHosterSelection.some(element => 'streamwish' === element)) {
-                const vids = await streamWishExtractor(videoUrl, 'StreamWish ');
-                for (const vid of vids) {
-                    videos.push(vid);
-                }
             }
+           
         }
         return this.sortVideos(videos);
     }
