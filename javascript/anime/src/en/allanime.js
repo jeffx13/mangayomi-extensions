@@ -134,6 +134,8 @@ class DefaultExtension extends MProvider {
         } else {
             episodes = episodesDub;
         }
+        episodes = episodes.reverse();
+
         return {
             description, author, status, genre, episodes
         }
@@ -159,11 +161,12 @@ class DefaultExtension extends MProvider {
         if (translationType.length == 0) {
             return [];
         }
-        const encodedGql = `?variables=%0A%20%20%20%20%20%20%20%20%7B%0A%20%20%20%20%20%20%20%20%20%20%22showId%22:%20%22${ep.showId}%22,%0A%20%20%20%20%20%20%20%20%20%20%22episodeString%22:%20%22${ep.episodeString}%22,%0A%20%20%20%20%20%20%20%20%20%20%22translationType%22:%20%22${translationType[0]}%22%0A%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%20%20&query=%0A%20%20%20%20%20%20%20%20query(%0A%20%20%20%20%20%20%20%20%20%20$showId:%20String!%0A%20%20%20%20%20%20%20%20%20%20$episodeString:%20String!%0A%20%20%20%20%20%20%20%20%20%20$translationType:%20VaildTranslationTypeEnumType!%0A%20%20%20%20%20%20%20%20)%20%7B%0A%20%20%20%20%20%20%20%20%20%20episode(%0A%20%20%20%20%20%20%20%20%20%20%20%20showId:%20$showId%0A%20%20%20%20%20%20%20%20%20%20%20%20episodeString:%20$episodeString%0A%20%20%20%20%20%20%20%20%20%20%20%20translationType:%20$translationType%0A%20%20%20%20%20%20%20%20%20%20)%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20sourceUrls%0A%20%20%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%20%20`;
+        const encodedGql = `?variables={"showId":"${ep.showId}","translationType":"sub","episodeString":"${ep.episodeString}"}&extensions={%22persistedQuery%22:{%22version%22:1,%22sha256Hash%22:%225f1a64b73793cc2234a389cf3a8f93ad82de7043017dd551f38f65b89daa65e0%22}}`;
         const videoJson = JSON.parse(await this.request(encodedGql));
         const videos = [];
         const altHosterSelection = preferences.get('alt_hoster_selection1');
         for (const video of videoJson.data.episode.sourceUrls) {
+        	if (video.sourceName.includes("Luf")) continue;
             const videoUrl = this.decryptSource(video.sourceUrl);
             let quality = "";
             if (videoUrl.includes("/apivtwo/") && altHosterSelection.some(element => 'player' === element)) {
