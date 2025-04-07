@@ -134,6 +134,7 @@ class DefaultExtension extends MProvider {
         } else {
             episodes = episodesDub;
         }
+
         episodes = episodes.reverse();
 
         return {
@@ -165,24 +166,31 @@ class DefaultExtension extends MProvider {
         const videoJson = JSON.parse(await this.request(encodedGql));
         const videos = [];
         const altHosterSelection = preferences.get('alt_hoster_selection1');
-        for (const video of videoJson.data.episode.sourceUrls) {
-        	if (video.sourceName.includes("Luf")) continue;
-            const videoUrl = this.decryptSource(video.sourceUrl);
-            let quality = "";
-            if (videoUrl.includes("/apivtwo/") && altHosterSelection.some(element => 'player' === element)) {
-                quality = `internal ${video.sourceName}`;
-                const vids = await new AllAnimeExtractor({ "Referer": baseUrl }, baseUrl).videoFromUrl(videoUrl, quality);
-                for (const vid of vids) {
-                    videos.push(vid);
-                }
-            } else if (videoUrl.includes("mp4upload.com") && altHosterSelection.some(element => 'mp4upload' === element)) {
-                const vids = await mp4UploadExtractor(videoUrl);
-                for (const vid of vids) {
-                    videos.push(vid);
-                }
-            }
-           
-        }
+	    
+	    const tasks = [];
+
+		for (const video of videoJson.data.episode.sourceUrls) {
+		    if (video.sourceName.includes("Luf")) continue;
+
+		    const videoUrl = this.decryptSource(video.sourceUrl);
+		    let quality = "";
+
+		    if (videoUrl.includes("/apivtwo/") && altHosterSelection.includes("player")) {
+		        quality = `internal ${video.sourceName}`;
+		        tasks.push(
+		            new AllAnimeExtractor({ "Referer": baseUrl }, baseUrl)
+		                .videoFromUrl(videoUrl, quality)
+		                .then(vids => videos.push(...vids))
+		        );
+		    } else if (videoUrl.includes("mp4upload.com") && altHosterSelection.includes("mp4upload")) {
+		        tasks.push(
+		            mp4UploadExtractor(videoUrl)
+		                .then(vids => videos.push(...vids))
+		        );
+		    }
+		}
+
+		await Promise.all(tasks);
         return this.sortVideos(videos);
     }
     sortVideos(videos) {
