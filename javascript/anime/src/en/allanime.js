@@ -172,42 +172,13 @@ class DefaultExtension extends MProvider {
                 for (const vid of vids) {
                     videos.push(vid);
                 }
-            } else if (["vidstreaming", "https://gogo", "playgo1.cc", "playtaku", "vidcloud"].some(element => videoUrl.includes(element)) && altHosterSelection.some(element => 'vidstreaming' === element)) {
-                const vids = await gogoCdnExtractor(videoUrl);
-                for (const vid of vids) {
-                    videos.push(vid);
-                }
-            } else if (["dood", "d0"].some(element => videoUrl.includes(element)) && altHosterSelection.some(element => 'dood' === element)) {
-                const vids = await doodExtractor(videoUrl);
-                for (const vid of vids) {
-                    videos.push(vid);
-                }
-            } else if (["ok.ru", "okru"].some(element => videoUrl.includes(element)) && altHosterSelection.some(element => 'okru' === element)) {
-                const vids = await okruExtractor(videoUrl);
-                for (const vid of vids) {
-                    videos.push(vid);
-                }
             } else if (videoUrl.includes("mp4upload.com") && altHosterSelection.some(element => 'mp4upload' === element)) {
                 const vids = await mp4UploadExtractor(videoUrl);
                 for (const vid of vids) {
                     videos.push(vid);
                 }
-            } else if (videoUrl.includes("streamlare.com") && altHosterSelection.some(element => 'streamlare' === element)) {
-                const vids = await streamlareExtractor(videoUrl, 'Streamlare ');
-                for (const vid of vids) {
-                    videos.push(vid);
-                }
-            } else if (["filemoon", "moonplayer"].some(element => videoUrl.includes(element)) && altHosterSelection.some(element => 'filemoon' === element)) {
-                const vids = await filemoonExtractor(videoUrl);
-                for (const vid of vids) {
-                    videos.push(vid);
-                }
-            } else if (videoUrl.includes("wish") && altHosterSelection.some(element => 'streamwish' === element)) {
-                const vids = await streamWishExtractor(videoUrl, 'StreamWish ');
-                for (const vid of vids) {
-                    videos.push(vid);
-                }
             }
+           
         }
         return this.sortVideos(videos);
     }
