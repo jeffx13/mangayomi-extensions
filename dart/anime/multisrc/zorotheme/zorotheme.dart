@@ -179,14 +179,14 @@ class ZoroTheme extends MProvider {
       episodesList.add(episode);
     }
 
-    anime.chapters = episodesList.reversed.toList();
+    anime.chapters = episodesList;
     return anime;
   }
 
   @override
   Future<List<MVideo>> getVideoList(String url) async {
     final id = substringAfterLast(url, '?ep=');
-
+  
     final res = (await client.get(
       Uri.parse(
         "${source.baseUrl}/ajax${ajaxRoute('${source.baseUrl}')}/episode/servers?episodeId=$id",
@@ -241,24 +241,40 @@ class ZoroTheme extends MProvider {
     String dataID,
   ) async {
     try {
+    
+    
+      
+      
+      
       final headers = {'Referer': 'https://megacloud.club/'};
       final serverUrl = ['https://megacloud.tv', 'https://rapid-cloud.co'];
 
-      final serverType = RegExp(r'https://megacloud\..*').hasMatch(url) ? 0 : 1;
-      final sourceUrl = [
-        '/embed-2/v2/e-1/getSources?id=',
-        '/ajax/embed-6-v2/getSources?id=',
-      ];
-      final sourceSpliter = ['/e-1/', '/embed-6-v2/'];
-      final id = url.split(sourceSpliter[serverType]).last.split('?').first;
-      final response = await client.get(
-        Uri.parse('${serverUrl[serverType]}${sourceUrl[serverType]}$id'),
+      
+      
+      final id = url.split('/').last.split('?').first;
+      
+      final response1 = await client.get(
+        Uri.parse('https://hianime.to/ajax/v2/episode/sources?id=$id'),
         headers: {"X-Requested-With": "XMLHttpRequest"},
       );
+      if (response1.statusCode != 200) {
+        return [];
+      }
+      
+      final itemId = getMapValue(response1.body, "link").split('/').last.split('?').first;
+      //throw 'https://megacloud.blog/embed-2/v3/e-1/$itemId?k=1&autoPlay=1&oa=1&asi=1';
+      
+      final response = await client.get(
+        Uri.parse('https://megacloud.blog/embed-2/v3/e-1/' + itemId + '?k=1&autoPlay=1&oa=1&asi=1'),
+        headers: {"referer  ": "https://hianime.to/"},
+      );
+      
+      throw 'lol';
       if (response.statusCode != 200) {
         return [];
       }
       final resServer = response.body;
+      throw resServer;
 
       final encrypted = getMapValue(resServer, "encrypted");
       List<Map<String, dynamic>> videoResJson = [];
